@@ -34,6 +34,13 @@ const item3 = new Item({
 
 const defaultItem = [item1, item2, item3];
 
+const listScheme = {
+  name: String,
+  items: [itemSchema],
+};
+
+const List = mongoose.model("List", listScheme);
+
 app.get("/", (req, res) => {
   let today = new Date();
 
@@ -81,14 +88,27 @@ app.post("/delete", (req, res) => {
   });
 });
 
-app.get("/work", (req, res) => {
-  res.render("list", { listTitle: "Work List", newListItems: workItems });
-});
-
-app.post("/work", (req, res) => {
-  let item = req.body.newItem;
-  workItems.push(item);
-  res.redirect("/work");
+app.get("/:list", (req, res) => {
+  const customListName = req.params.list;
+  List.findOne({ name: customListName }, (err, foundList) => {
+    if (!err) {
+      if (!foundList) {
+        // create a new list
+        const list = new List({
+          name: customListName,
+          items: defaultItem,
+        });
+        list.save();
+        res.redirect("/" + customListName);
+      } else {
+        // show an existing list
+        res.render("list", {
+          listTitle: foundList.name,
+          foundItems: foundList.items,
+        });
+      }
+    }
+  });
 });
 
 app.get("/about", (req, res) => {
