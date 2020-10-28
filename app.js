@@ -9,10 +9,13 @@ app.set("view engine", "ejs");
 mongoose.connect("mongodb://localhost:27017/todolistDB", {
   useNewUrlParser: true,
   useUnifiedTopology: true,
+  useFindAndModify: false,
 });
 
 const itemSchema = {
-  name: String,
+  name: {
+    type: String,
+  },
 };
 
 const Item = mongoose.model("Item", itemSchema);
@@ -64,6 +67,18 @@ app.post("/", (req, res) => {
   });
   item.save();
   res.redirect("/");
+});
+
+app.post("/delete", (req, res) => {
+  const checkedItem = req.body.checkbox;
+  Item.findByIdAndRemove(checkedItem, (err) => {
+    if (err) {
+      console.log(err);
+    } else {
+      console.log("successfuly deleted");
+      res.redirect("/");
+    }
+  });
 });
 
 app.get("/work", (req, res) => {
