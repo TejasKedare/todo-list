@@ -42,14 +42,14 @@ const listScheme = {
 const List = mongoose.model("List", listScheme);
 
 app.get("/", (req, res) => {
-  let today = new Date();
+  // let today = new Date();
 
-  let options = {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  };
-  let currentDay = today.toLocaleDateString("hi-IN", options);
+  // let options = {
+  //   weekday: "long",
+  //   day: "numeric",
+  //   month: "long",
+  // };
+  // let currentDay = today.toLocaleDateString("hi-IN", options);
 
   Item.find({}, (err, foundItems) => {
     if (foundItems.length === 0) {
@@ -62,30 +62,27 @@ app.get("/", (req, res) => {
       });
       res.redirect("/");
     } else {
-      res.render("list", { listTitle: currentDay, foundItems: foundItems });
+      res.render("list", { listTitle: "Today", foundItems: foundItems });
     }
   });
 });
 
 app.post("/", (req, res) => {
   const itemName = req.body.newItem;
+  const listName = req.body.list;
   const item = new Item({
     name: itemName,
   });
-  item.save();
-  res.redirect("/");
-});
-
-app.post("/delete", (req, res) => {
-  const checkedItem = req.body.checkbox;
-  Item.findByIdAndRemove(checkedItem, (err) => {
-    if (err) {
-      console.log(err);
-    } else {
-      console.log("successfuly deleted");
-      res.redirect("/");
-    }
-  });
+  if (listName === "Today") {
+    item.save();
+    res.redirect("/");
+  } else {
+    List.findOne({ name: listName }, (err, foundList) => {
+      foundList.items.push(item);
+      foundList.save();
+      res.redirect("/" + listName);
+    });
+  }
 });
 
 app.get("/:list", (req, res) => {
@@ -107,6 +104,18 @@ app.get("/:list", (req, res) => {
           foundItems: foundList.items,
         });
       }
+    }
+  });
+});
+
+app.post("/delete", (req, res) => {
+  const checkedItem = req.body.checkbox;
+  Item.findByIdAndRemove(checkedItem, (err) => {
+    if (err) {
+      console.log(err);
+    } else {
+      console.log("successfuly deleted");
+      res.redirect("/");
     }
   });
 });
